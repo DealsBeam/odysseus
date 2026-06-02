@@ -67,7 +67,6 @@ function _initModelPickerDropdown() {
   const btn = document.getElementById('model-picker-btn');
   const menu = document.getElementById('model-picker-menu');
   const search = document.getElementById('model-picker-search');
-  const clearBtn = document.getElementById('model-picker-search-clear');
   const listEl = document.getElementById('model-picker-list');
   const searchRow = menu ? menu.querySelector('.model-picker-search-row') : null;
   if (!wrap || !btn || !menu || !search || !listEl) return;
@@ -173,9 +172,6 @@ function _initModelPickerDropdown() {
     }
     if (searchRow) {
       searchRow.classList.toggle('searching', !!filter);
-    }
-    if (clearBtn) {
-      clearBtn.classList.toggle('hidden', !filter);
     }
 
     // Load favorites
@@ -376,15 +372,6 @@ function _initModelPickerDropdown() {
       _close();
     }
   });
-
-  if (clearBtn) {
-    clearBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      search.value = '';
-      _populate('');
-      search.focus();
-    });
-  }
 
   search.addEventListener('input', () => _populate(search.value));
   search.addEventListener('click', (e) => e.stopPropagation());

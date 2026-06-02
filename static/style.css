@@ -2609,10 +2609,6 @@ body.bg-pattern-sparkles {
     .model-picker-menu.no-models .model-picker-search-row {
       margin-bottom: 0;
     }
-    .model-picker-search-wrap {
-      position: relative;
-      min-width: 0;
-    }
     .model-picker-search-row.searching {
       grid-template-columns: minmax(0, 1fr) 0px;
       gap: 0;
@@ -2625,7 +2621,7 @@ body.bg-pattern-sparkles {
     .model-picker-menu input[type="text"] {
       width: 100%;
       box-sizing: border-box;
-      padding: 6px 26px 6px 8px;
+      padding: 6px 8px;
       font-size: 0.82em;
       border: 1px solid var(--border);
       border-radius: 4px;
@@ -2678,32 +2674,6 @@ body.bg-pattern-sparkles {
     .model-picker-action-btn:hover svg,
     .model-picker-action-btn:focus-visible svg {
       transform: rotate(90deg);
-    }
-    .model-picker-clear-btn {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      padding: 0;
-      border: none;
-      background: none;
-      color: var(--fg);
-      opacity: 0.35;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      transition: opacity 0.15s, color 0.15s;
-      z-index: 2;
-    }
-    .model-picker-clear-btn:hover,
-    .model-picker-clear-btn:focus-visible {
-      opacity: 0.8;
-      color: var(--red);
-      outline: none;
     }
     .model-picker-list {
       max-height: min(280px, 50dvh);
