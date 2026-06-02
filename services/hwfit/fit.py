@@ -34,7 +34,7 @@ _BW_KEYS_SORTED = sorted(GPU_BANDWIDTH.keys(), key=len, reverse=True)
 
 # metal: backstop for Apple Silicon chips not in GPU_BANDWIDTH (e.g. a future
 # M5) — the named chips above take the accurate bandwidth path instead.
-FALLBACK_K = {"cuda": 220, "rocm": 180, "metal": 150, "cpu_x86": 70, "cpu_arm": 90}
+FALLBACK_K = {"cuda": 220, "rocm": 180, "metal": 150, "openvino": 160, "cpu_x86": 70, "cpu_arm": 90}
 
 USE_CASE_WEIGHTS = {
     "general":    (0.45, 0.30, 0.15, 0.10),

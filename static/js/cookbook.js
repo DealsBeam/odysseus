@@ -279,6 +279,11 @@ export function _detectBackend(model) {
     return { backend: 'llamacpp', label: 'llama.cpp' };
   }
 
+  // Intel GPUs → OpenVINO
+  if (sysBackend === 'openvino') {
+    return { backend: 'openvino', label: 'OpenVINO' };
+  }
+
   // ROCm/AMD machines should not blindly default HF safetensors models to
   // vLLM. SGLang is the safer OpenAI-compatible default for plain HF text
   // repos there; llama.cpp still wins above whenever the model is GGUF.

@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import shutil
 import subprocess
 import time
@@ -281,6 +282,66 @@ def _detect_apple_silicon():
     }
 
 
+def _detect_intel():
+    """Detect Intel GPUs and NPUs (OpenVINO targets).
+
+    Intel GPUs don't always expose VRAM via sysfs (they use unified system RAM).
+    On Linux, we check /sys/class/drm for Intel vendor ID (0x8086).
+    """
+    def _read(path):
+        if _remote_host:
+            val = _run(["cat", path])
+            return val.strip() if val else None
+        try:
+            with open(path, encoding="utf-8", errors="replace") as f:
+                return f.read().strip()
+        except Exception:
+            return None
+
+    try:
+        cards = []
+        # Check /sys/class/drm for Intel GPUs (Vendor 0x8086)
+        path = "/sys/class/drm"
+        if _remote_host:
+            out = _run(["ls", path])
+            entries = out.split() if out else []
+        else:
+            entries = os.listdir(path) if os.path.exists(path) else []
+
+        for entry in entries:
+            if not entry.startswith("card"): continue
+            base = f"{path}/{entry}/device"
+            vendor = _read(f"{base}/vendor")
+            if vendor != "0x8086": continue
+
+            name = _read(f"{base}/model_name") or _read(f"{base}/device_name")
+            if not name:
+                # Try to get a human name from lspci if available
+                pci_id = _run(["lspci", "-s", _read(f"{base}/uevent").split("\n")[0].split("=")[1]]) if not _remote_host else None
+                name = pci_id.split(": ")[-1] if pci_id else f"Intel GPU ({entry})"
+
+            # Intel iGPUs/dGPUs typically use system RAM. We don't have a reliable
+            # way to get "dedicated" VRAM from sysfs on all kernels, so we report
+            # 0 and let the unified_memory flag handle the budgeting.
+            cards.append({"index": len(cards), "name": name, "vram_gb": 0.0})
+
+        if not cards:
+            return None
+
+        return {
+            "gpu_name": cards[0]["name"],
+            "gpu_vram_gb": 0.0,
+            "gpu_count": len(cards),
+            "gpus": cards,
+            "gpu_groups": _group_gpus(cards),
+            "homogeneous": True,
+            "backend": "openvino",
+            "unified_memory": True,
+        }
+    except Exception:
+        return None
+
+
 def _read_file(path):
     """Read a file, locally or via SSH."""
     if _remote_host:
@@ -423,7 +484,9 @@ def _detect_windows():
         "    $r.gpu_name = $wmiGpu.Name; "
         "    $r.gpu_vram_gb = [math]::Round($wmiGpu.AdapterRAM / 1073741824, 1); "
         "    $r.gpu_count = 1; "
-        "    $r.gpu_backend = 'cpu_x86'; "  # WMI doesn't tell us CUDA/ROCm
+        "    $r.gpu_backend = 'cpu_x86'; "
+        "    if ($r.gpu_name -like '*Intel*') { $r.gpu_backend = 'openvino' } "
+        "    elseif ($r.gpu_name -like '*Radeon*') { $r.gpu_backend = 'rocm' } "
         "  } "
         "}; "
         "$r | ConvertTo-Json -Compress"
@@ -551,7 +614,7 @@ def detect_system(host="", ssh_port="", platform="", fresh=False):
     cpu_cores = _get_cpu_count()
     cpu_name = _get_cpu_name()
 
-    gpu_info = _detect_apple_silicon() or _detect_nvidia() or _detect_amd()
+    gpu_info = _detect_apple_silicon() or _detect_nvidia() or _detect_amd() or _detect_intel()
 
     if gpu_info:
         result = {
